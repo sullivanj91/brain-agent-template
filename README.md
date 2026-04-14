@@ -54,7 +54,9 @@ CLAUDE.md          ← context loaded automatically by every Claude Code session
 
 ## 2-Way Communication
 
-**Owner → Agent:** Write `.md` files in `inbox/owner/`. The agent reads all files there at the start of every session. Move them to `inbox/resolved/` when done.
+**Owner → Agent (standing directives):** Write `.md` files in `inbox/owner/`. The agent reads all files there at the start of every session. Move them to `inbox/resolved/` when done.
+
+**Owner → Agent (one-time instructions):** Create a GitHub Issue labeled `directive`. The agent reads open directive issues each session, acts on them, comments to acknowledge, and closes them. You can create these from the GitHub UI or via `gh issue create --label directive`.
 
 **Agent → Owner:** The agent creates GitHub Issues labeled `request` when it needs something (an API key, a new data source, a permission). You get notified by email. Close the issue once resolved.
 
