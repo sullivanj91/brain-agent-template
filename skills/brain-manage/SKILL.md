@@ -74,6 +74,29 @@ Load RemoteTrigger via ToolSearch, then: RemoteTrigger({action: "run", trigger_i
 ```
 The trigger ID is in `prompts/role.md` at the top.
 
+### Upgrade Framework
+Update the brain-agent harness (skills, plugin config, inbox structure) without touching your agent's data or prompts.
+
+Check current version:
+```bash
+cat .brain-agent-version
+```
+
+Apply upgrade (fetches framework files from the template, leaves agent files untouched):
+```bash
+git fetch --depth 1 https://github.com/sullivanj91/brain-agent-template.git main
+git checkout FETCH_HEAD -- skills/ .claude-plugin/ inbox/README.md inbox/owner/README.md .brain-agent-version
+git diff --staged --stat
+git commit -m "chore: upgrade brain-agent framework to $(cat .brain-agent-version)"
+git push
+```
+
+**Files upgraded** (framework-owned): `skills/`, `.claude-plugin/`, `inbox/README.md`, `inbox/owner/README.md`, `.brain-agent-version`
+
+**Files preserved** (agent-owned): `prompts/role.md`, `CLAUDE.md`, `pyproject.toml`, `data/`, `logs/`, `scripts/`, `inbox/owner/*.md`
+
+For skill-only updates (no repo changes needed), run `/plugin marketplace update` instead.
+
 ## Common Workflows
 
 **"The agent requested a new API key"**
@@ -91,3 +114,8 @@ The trigger ID is in `prompts/role.md` at the top.
 2. Edit `prompts/role.md` to correct course
 3. Optionally revert bad commits: `git revert <hash>`
 4. Add a `directive` issue explaining what to do differently
+
+**"I want to upgrade the framework"**
+1. `cat .brain-agent-version` — see current version
+2. Run the upgrade commands in **Upgrade Framework** above
+3. Review the staged diff before committing
