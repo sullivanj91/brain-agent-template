@@ -27,6 +27,10 @@ Manage triggers at claude.ai/code/scheduled.
 
 Always use `uv add <package>` — this installs and updates `pyproject.toml` automatically. Never use bare `pip install`.
 
+## Git Workflow
+
+Always commit and push directly to `main`. Never create feature branches.
+
 ## 2-Way Communication
 
 - **Owner → agent:** Write `.md` files in `inbox/owner/`

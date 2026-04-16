@@ -25,9 +25,13 @@ Scaffold a complete autonomous brain agent: GitHub repo + cloud scheduled trigge
 
 Ask the user (use AskUserQuestion):
 - Agent name (will become `<name>-brain` repo)
-- One-line purpose ("what does this agent do each session?")
+- One-line purpose ("what does this agent do?")
+- **Session structure** — this shapes how `prompts/role.md` is written:
+  - *Single routine*: Every run does the same work (e.g. "check metrics and post a Slack summary")
+  - *Daily + weekly*: Daily runs execute the work; one run per week the agent reviews performance and self-evolves its own instructions in `prompts/role.md` (recommended for research, trading, monitoring agents)
+  - Describe what the daily work is, and (if weekly) what the agent should review and evolve
 - Schedule (human-readable, e.g. "every weekday at 9am ET") — convert to UTC cron
-- Model: default `claude-sonnet-4-6`; suggest Opus for complex weekly reasoning, Haiku for lightweight reporting
+- Model: default `claude-sonnet-4-6`; suggest Opus for complex reasoning/strategy sessions, Haiku for lightweight reporting
 - GitHub visibility: public or private
 - CCR environment to use (list available environments via RemoteTrigger list, or ask user)
 - Environment variables needed (names only — user adds values in the environment settings)
@@ -54,7 +58,24 @@ Fill in `prompts/role.md` — replace placeholders:
 - `{{AGENT_NAME}}` → agent name
 - `{{MODEL}}` → chosen model
 - `{{SCHEDULE}}` → human-readable schedule
-- `{{AGENT_TASK_DESCRIPTION}}` → detailed description of what the agent should do each session, written in second person ("You are a..."). Include specific steps, data sources, outputs expected.
+- `{{AGENT_TASK_DESCRIPTION}}` → structured session instructions based on the user's session structure answer:
+
+  **If single routine:** Write numbered steps for what the agent does every run. Be specific about data sources, outputs, and where to write results.
+
+  **If daily + weekly:** Structure as two named sections:
+  ```
+  ## Daily Work
+  1. [specific steps for the regular work]
+  2. Read data/observations.md and data/learnings.md for context from past sessions
+  3. [execute tasks, write outputs to appropriate files]
+
+  ## Weekly Self-Evolution (run once per week, e.g. on [day])
+  1. Read logs/evolution/changes.md and data/learnings.md to understand your history
+  2. Review recent data/observations.md entries — what patterns are emerging?
+  3. Evaluate what's working and what isn't
+  4. Update this file (prompts/role.md) with improved instructions — refine your daily steps, add new approaches, remove what isn't useful
+  5. Log what you changed and why in logs/evolution/changes.md
+  ```
 
 ```bash
 cd /tmp/<name>-brain
