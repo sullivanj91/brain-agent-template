@@ -44,13 +44,13 @@ gh issue create --title "Directive: <action>" --body "<instructions>" --label di
 ```
 
 **Standing directive** (persists across sessions):
-Create a `.md` file in `inbox/owner/`:
+Create a `.md` file in `inbox/<username>/` (where username matches the `BRAIN_USER` env var on the trigger):
 ```bash
 # Example: pause the agent for a week
-echo "Skip all activity until 2026-04-20. Markets are thin." > inbox/owner/pause.md
-git add inbox/owner/pause.md && git commit -m "directive: pause until Apr 20" && git push
+echo "Skip all activity until 2026-04-20. Markets are thin." > inbox/<username>/pause.md
+git add inbox/<username>/pause.md && git commit -m "directive: pause until Apr 20" && git push
 ```
-Remove from `inbox/owner/` (or move to `inbox/resolved/`) when no longer needed.
+Remove from `inbox/<username>/` (or move to `inbox/resolved/`) when no longer needed.
 
 ### Update Agent Prompt
 Edit `prompts/role.md` directly — the agent will read the updated instructions on its next session:
@@ -84,18 +84,35 @@ cat .brain-agent-version
 
 Apply upgrade (fetches framework files from the template, leaves agent files untouched):
 ```bash
-git fetch --depth 1 https://github.com/sullivanj91/brain-agent-template.git main
-git checkout FETCH_HEAD -- skills/ .claude-plugin/ inbox/README.md inbox/owner/README.md .brain-agent-version
+git fetch --depth 1 https://github.com/ArcInstitute/brain-agent-template.git main
+git checkout FETCH_HEAD -- skills/ .claude-plugin/ inbox/README.md inbox/example/README.md .brain-agent-version
 git diff --staged --stat
 git commit -m "chore: upgrade brain-agent framework to $(cat .brain-agent-version)"
 git push
 ```
 
-**Files upgraded** (framework-owned): `skills/`, `.claude-plugin/`, `inbox/README.md`, `inbox/owner/README.md`, `.brain-agent-version`
+**Files upgraded** (framework-owned): `skills/`, `.claude-plugin/`, `inbox/README.md`, `inbox/example/README.md`, `.brain-agent-version`
 
-**Files preserved** (agent-owned): `prompts/role.md`, `CLAUDE.md`, `pyproject.toml`, `data/`, `logs/`, `scripts/`, `inbox/owner/*.md`
+**Files preserved** (agent-owned): `prompts/role.md`, `CLAUDE.md`, `pyproject.toml`, `data/`, `logs/`, `scripts/`, `inbox/<username>/*.md`
 
 For skill-only updates (no repo changes needed), run `/plugin marketplace update` instead.
+
+### Add a User
+
+Each user needs their own inbox/data/logs directories and a separate CCR trigger:
+
+```bash
+# 1. Create user-scoped directories
+mkdir -p inbox/<username> data/<username> logs/<username>/evolution
+touch inbox/<username>/.gitkeep data/<username>/.gitkeep logs/<username>/evolution/.gitkeep
+cp inbox/example/README.md inbox/<username>/README.md
+cp data/example/observations.md data/<username>/observations.md
+cp data/example/learnings.md data/<username>/learnings.md
+cp logs/example/evolution/changes.md logs/<username>/evolution/changes.md
+git add . && git commit -m "feat: add user <username>" && git push
+```
+
+2. Create a new CCR trigger at claude.ai/code/scheduled pointing at this repo, with `BRAIN_USER=<username>` in the environment variables.
 
 ## Common Workflows
 

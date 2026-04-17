@@ -26,6 +26,7 @@ Scaffold a complete autonomous brain agent: GitHub repo + cloud scheduled trigge
 Ask the user (use AskUserQuestion):
 - Agent name (will become `<name>-brain` repo)
 - One-line purpose ("what does this agent do?")
+- **GitHub username** of the primary owner (used as `BRAIN_USER` — e.g. `alice`)
 - **Session structure** — this shapes how `prompts/role.md` is written:
   - *Single routine*: Every run does the same work (e.g. "check metrics and post a Slack summary")
   - *Daily + weekly*: Daily runs execute the work; one run per week the agent reviews performance and self-evolves its own instructions in `prompts/role.md` (recommended for research, trading, monitoring agents)
@@ -53,6 +54,19 @@ Fill in `CLAUDE.md` — replace placeholders:
 - `{{TRIGGER_NAME}}` → agent name + "Agent"
 - `{{MODEL}}` → chosen model
 - `{{SCHEDULE}}` → human-readable schedule
+
+Create user-scoped directories for the primary owner:
+```bash
+cd /tmp/<name>-brain
+mkdir -p inbox/<username> data/<username> logs/<username>/evolution
+touch inbox/<username>/.gitkeep data/<username>/.gitkeep logs/<username>/evolution/.gitkeep
+# Move the example state files into the user's namespace
+mv data/example/observations.md data/<username>/observations.md
+mv data/example/learnings.md data/<username>/learnings.md
+mv logs/example/evolution/changes.md logs/<username>/evolution/changes.md
+# Rename the inbox template dir
+mv inbox/example inbox/<username>
+```
 
 Fill in `prompts/role.md` — replace placeholders:
 - `{{AGENT_NAME}}` → agent name
@@ -103,6 +117,7 @@ Use the `RemoteTrigger` tool (load with ToolSearch first):
           "sources": [
             {"git_repository": {"url": "https://github.com/<owner>/<name>-brain"}}
           ],
+          "env": {"BRAIN_USER": "<github-username>"},
           "allowed_tools": ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch"]
         },
         "events": [

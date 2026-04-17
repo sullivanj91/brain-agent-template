@@ -9,11 +9,18 @@ Autonomous agent persistent state. All files are created and evolved by the agen
 ## Repo Structure
 
 - `prompts/role.md` — agent's instructions; agent evolves this over time
-- `logs/evolution/` — changelog of strategic decisions and self-modifications
-- `data/` — observations and learnings across sessions
-- `inbox/owner/` — write directives here; agent reads every session
+- `logs/<username>/evolution/` — per-user changelog of strategic decisions and self-modifications
+- `data/<username>/` — per-user observations and learnings across sessions
+- `inbox/<username>/` — write directives here; agent reads every session (scoped to `$BRAIN_USER`)
 - `inbox/resolved/` — move handled inbox items here
 - `scripts/` — agent-created analysis and execution code
+
+## Multi-User Support
+
+State is isolated per user via the `BRAIN_USER` environment variable set in each CCR trigger.
+- One trigger per user, each with `BRAIN_USER=<username>` in the environment
+- All state paths are automatically prefixed by `$BRAIN_USER`
+- To add a user: create their directories (`inbox/<username>/`, `data/<username>/`, `logs/<username>/evolution/`), commit, and create a new CCR trigger with `BRAIN_USER=<username>`
 
 ## Scheduled Triggers
 
@@ -34,5 +41,5 @@ For any other repos the agent works in: use feature branches and open PRs for hu
 
 ## 2-Way Communication
 
-- **Owner → agent:** Write `.md` files in `inbox/owner/`
+- **Owner → agent:** Write `.md` files in `inbox/<username>/` (matches `$BRAIN_USER`)
 - **Agent → owner:** GitHub Issues labeled `request`
