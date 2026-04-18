@@ -94,12 +94,54 @@ To give another person their own isolated namespace in this brain, open this rep
 
 It will ask for their GitHub username, create their `inbox/<username>/`, `data/<username>/`, and `logs/<username>/evolution/` directories, commit them, and create a new CCR scheduled trigger with `BRAIN_USER=<username>` wired up automatically.
 
+## Upgrading the Framework
+
+The harness (skills, plugin config, inbox structure) is versioned via GitHub releases. Your agent-owned files (`prompts/role.md`, `CLAUDE.md`, `data/`, `logs/`) are never touched.
+
+To upgrade, open your brain repo in Claude Code and run:
+
+```
+/brain-manage upgrade framework
+```
+
+It will:
+1. Show your current version and available releases
+2. Recommend the latest **safe update** (same major version — no breaking changes)
+3. Display the release notes for the target version
+4. Warn if upgrading across a major version boundary (breaking changes possible)
+5. Apply the upgrade and push
+
+To check what version you're on without upgrading:
+```bash
+cat .brain-agent-version
+```
+
+To see all available releases:
+```bash
+gh release list --repo ArcInstitute/brain-agent-template
+```
+
+## Releasing a New Harness Version
+
+For maintainers of this template — to publish a new versioned release:
+
+```
+/brain-manage cut release
+```
+
+It will ask whether this is a patch / minor / major bump, update `.brain-agent-version`, tag, push, and create a GitHub release with auto-generated notes.
+
+**Semver guide:**
+- `patch` (`1.0.0 → 1.0.1`): bug fixes, doc updates, no behavior change
+- `minor` (`1.0.0 → 1.1.0`): new features, backward-compatible
+- `major` (`1.0.0 → 2.0.0`): breaking changes to harness structure or agent file formats
+
 ## Skills (auto-loaded when this repo is open in Claude Code)
 
 | Skill | Description |
 |---|---|
 | `/new-brain-agent` | Scaffold a new brain agent from this template |
-| `/brain-manage` | Check agent status, review logs, respond to issues, update prompts |
+| `/brain-manage` | Check status, upgrade framework, add users, cut releases |
 
 ## Dependency Management
 
