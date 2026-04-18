@@ -4,7 +4,7 @@ description: |
   Manage an autonomous Brain Agent — check status, review recent activity, respond to
   agent requests, send directives, and update the agent's prompt. Works on any brain
   agent repo that follows the Brain Agent pattern.
-  Triggers on: brain manage, agent status, check agent, respond to agent, agent request, brain status, update agent prompt, add user, new user, onboard user.
+  Triggers on: brain manage, agent status, check agent, respond to agent, agent request, brain status, update agent prompt, add user, new user, onboard user, upgrade framework, upgrade harness, check for updates, cut release, new release, tag release.
 ---
 
 # Brain Manage
@@ -77,17 +77,46 @@ The trigger ID is in `prompts/role.md` at the top.
 ### Upgrade Framework
 Update the brain-agent harness (skills, plugin config, inbox structure) without touching your agent's data or prompts.
 
-Check current version:
+#### Step 1 — Check current version and available releases
+
 ```bash
+# What version is installed?
 cat .brain-agent-version
+
+# What releases are available?
+gh release list --repo ArcInstitute/brain-agent-template --limit 10
 ```
 
-Apply upgrade (fetches framework files from the template, leaves agent files untouched):
+Parse the output and determine:
+- **Current version** from `.brain-agent-version` (e.g. `1.0.0`)
+- **Safe update** — latest release with the same major version (no breaking changes)
+- **Latest overall** — may be a higher major version (breaking changes possible)
+
+Present a summary to the user, e.g.:
+> You're on **v1.0.0**. Latest safe update: **v1.2.0** (same major). Latest overall: **v2.0.0** (major bump — may have breaking changes).
+
+#### Step 2 — Show release notes for the target version
+
 ```bash
-git fetch --depth 1 https://github.com/ArcInstitute/brain-agent-template.git main
+gh release view <target-tag> --repo ArcInstitute/brain-agent-template
+```
+
+Summarize the key changes from the release body.
+
+#### Step 3 — Warn on major version crossing
+
+If the target version has a higher major number than current, show an explicit warning:
+> ⚠️ **Breaking change warning:** Upgrading from v1.x to v2.x may require manual changes to agent-owned files (prompts/role.md, CLAUDE.md). Review the release notes before proceeding.
+
+Ask the user to confirm before continuing.
+
+#### Step 4 — Apply the upgrade
+
+```bash
+git fetch --depth 1 https://github.com/ArcInstitute/brain-agent-template.git refs/tags/<target-tag>
 git checkout FETCH_HEAD -- skills/ .claude-plugin/ inbox/README.md inbox/example/README.md .brain-agent-version
 git diff --staged --stat
-git commit -m "chore: upgrade brain-agent framework to $(cat .brain-agent-version)"
+git commit -m "chore: upgrade brain-agent framework to <target-tag>"
 git push
 ```
 
@@ -96,6 +125,37 @@ git push
 **Files preserved** (agent-owned): `prompts/role.md`, `CLAUDE.md`, `pyproject.toml`, `data/`, `logs/`, `scripts/`, `inbox/<username>/*.md`
 
 For skill-only updates (no repo changes needed), run `/plugin marketplace update` instead.
+
+### Cut a Release
+
+Use this when working in the `brain-agent-template` repo itself to publish a new versioned release. Releases are what downstream brain agents upgrade to via the **Upgrade Framework** workflow above.
+
+#### Step 1 — Determine bump type
+
+Ask the user (or infer from recent commits):
+- **patch** (`1.0.0 → 1.0.1`): bug fixes, doc updates, no behavior change
+- **minor** (`1.0.0 → 1.1.0`): new features, backward-compatible
+- **major** (`1.0.0 → 2.0.0`): breaking changes to harness structure or agent-owned file formats
+
+#### Step 2 — Bump `.brain-agent-version` and commit
+
+```bash
+# Read current version, calculate next, write it
+echo "<new-version>" > .brain-agent-version
+git add .brain-agent-version
+git commit -m "chore: bump version to v<new-version>"
+git push
+```
+
+#### Step 3 — Tag and publish
+
+```bash
+git tag v<new-version>
+git push origin v<new-version>
+gh release create v<new-version> --generate-notes --title "v<new-version>"
+```
+
+GitHub auto-generates release notes from commits since the last tag. The release is immediately available for downstream brain agents to upgrade to.
 
 ### Add a User
 
